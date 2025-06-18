@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Life Pilot</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f8f9fb;
+      color: #333;
+    }
+    header {
+      background-color: #4b3bbd;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+    }
+    nav {
+      display: flex;
+      justify-content: center;
+      background-color: #635bff;
+      flex-wrap: wrap;
+      padding: 10px;
+    }
+    nav a {
+      color: white;
+      margin: 8px 15px;
+      text-decoration: none;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      padding: 20px;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    .btn {
+      background-color: #6c5ce7;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      width: 100%;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    select, input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    #quoteArea {
+      font-style: italic;
+      font-size: 16px;
+      margin: 20px 0;
+      text-align: center;
+      color: #555;
+    }
+    @media (max-width: 600px) {
+      header {
+        font-size: 20px;
+      }
+      nav a {
+        margin: 5px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>Life Pilot</header>
+  <nav>
+    <a onclick="showSection('home')">Home</a>
+    <a onclick="showSection('dashboard')">Dashboard</a>
+    <a onclick="showSection('tasks')">Tasks</a>
+    <a onclick="toggleTheme()">Toggle Theme</a>
+  </nav>
+
+  <div class="container" id="homeSection">
+    <div class="card">
+      <h2>Welcome to Life Pilot</h2>
+      <p>This personal assistant helps you manage tasks, budget, and notes all in one place. Use the menu to navigate between sections.</p>
+      <div id="quoteArea">Click the button to get inspired!</div>
+      <button class="btn" onclick="generateQuote()">Generate Quote</button>
+    </div>
+  </div>
+
+  <div class="container" id="dashboardSection" style="display:none;">
+    <div class="card">
+      <h2>Dashboard</h2>
+      <p><strong>Upcoming Tasks:</strong> <span id="taskCount">0</span></p>
+      <p><strong>Budget Overview:</strong> $<span id="budgetTotal">0.00</span></p>
+      <p><strong>Recent Notes:</strong> <span id="noteCount">0</span></p>
+      <p><strong>Daily Tip:</strong> Plan your top 3 tasks every morning.</p>
+    </div>
+  </div>
+
+  <div class="container" id="tasksSection" style="display:none;">
+    <div class="card">
+      <h2>Task Manager</h2>
+      <input type="text" id="taskTitle" placeholder="Task title">
+      <input type="date" id="taskDate">
+      <select id="taskPriority">
+        <option>Low</option>
+        <option>Medium</option>
+        <option>High</option>
+      </select>
+      <button class="btn" onclick="addTask(); showActivityOptions();">Add Task</button>
+    </div>
+    <div class="card">
+      <h2>Budget Tracker</h2>
+      <input type="text" id="budgetDesc" placeholder="Description">
+      <input type="number" id="budgetAmount" placeholder="Amount">
+      <select id="budgetType">
+        <option>Income</option>
+        <option>Expense</option>
+      </select>
+      <button class="btn" onclick="addBudgetItem()">Add Item</button>
+    </div>
+    <div class="card">
+      <h2>Notes</h2>
+      <input type="text" id="noteTitle" placeholder="Note title">
+      <textarea id="noteText" placeholder="Your note..."></textarea>
+      <button class="btn" onclick="addNote()">Save Note</button>
+    </div>
+    <div class="card" id="activityOptions" style="display:none;">
+      <h3>Choose an Activity</h3>
+      <select onchange="navigateActivity(this.value)">
+        <option value="">Select Activity</option>
+        <option value="home">Go to Home</option>
+        <option value="dashboard">Go to Dashboard</option>
+      </select>
+    </div>
+  </div>
+
+  <script>
+    function showSection(section) {
+      document.getElementById("homeSection").style.display = 'none';
+      document.getElementById("dashboardSection").style.display = 'none';
+      document.getElementById("tasksSection").style.display = 'none';
+
+      if (section === 'home') {
+        document.getElementById("homeSection").style.display = 'grid';
+      } else if (section === 'dashboard') {
+        document.getElementById("dashboardSection").style.display = 'grid';
+      } else if (section === 'tasks') {
+        document.getElementById("tasksSection").style.display = 'grid';
+      }
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle("dark");
+      localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+    }
+
+    function applySavedTheme() {
+      const theme = localStorage.getItem("theme");
+      if (theme === "dark") document.body.classList.add("dark");
+    }
+
+    function addTask() {
+      const title = document.getElementById("taskTitle").value;
+      const date = document.getElementById("taskDate").value;
+      const priority = document.getElementById("taskPriority").value;
+
+      const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+      tasks.push({ title, date, priority });
+      localStorage.setItem("tasks", JSON.stringify(tasks));
+
+      document.getElementById("taskTitle").value = "";
+      document.getElementById("taskDate").value = "";
+      document.getElementById("taskPriority").value = "Low";
+
+      updateDashboard();
+    }
+
+    function addBudgetItem() {
+      const desc = document.getElementById("budgetDesc").value;
+      const amount = parseFloat(document.getElementById("budgetAmount").value);
+      const type = document.getElementById("budgetType").value;
+
+      const budget = JSON.parse(localStorage.getItem("budget") || "[]");
+      budget.push({ desc, amount, type });
+      localStorage.setItem("budget", JSON.stringify(budget));
+
+      document.getElementById("budgetDesc").value = "";
+      document.getElementById("budgetAmount").value = "";
+
+      updateDashboard();
+    }
+
+    function addNote() {
+      const title = document.getElementById("noteTitle").value;
+      const text = document.getElementById("noteText").value;
+
+      const notes = JSON.parse(localStorage.getItem("notes") || "[]");
+      notes.push({ title, text });
+      localStorage.setItem("notes", JSON.stringify(notes));
+
+      document.getElementById("noteTitle").value = "";
+      document.getElementById("noteText").value = "";
+
+      updateDashboard();
+    }
+
+    function updateDashboard() {
+      const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+      const notes = JSON.parse(localStorage.getItem("notes") || "[]");
+      const budget = JSON.parse(localStorage.getItem("budget") || "[]");
+
+      document.getElementById("taskCount").innerText = tasks.length;
+      document.getElementById("noteCount").innerText = notes.length;
+      const total = budget.reduce((acc, item) => item.type === "Income" ? acc + item.amount : acc - item.amount, 0);
+      document.getElementById("budgetTotal").innerText = total.toFixed(2);
+    }
+
+    function generateQuote() {
+      const quotes = [
+        "The best way to get started is to quit talking and begin doing.",
+        "Don't let yesterday take up too much of today.",
+        "Success doesn't just find you. You have to go out and get it.",
+        "Great things never come from comfort zones.",
+        "Push yourself, because no one else is going to do it for you."
+      ];
+      const randomIndex = Math.floor(Math.random() * quotes.length);
+      document.getElementById("quoteArea").innerText = quotes[randomIndex];
+    }
+
+    function showActivityOptions() {
+      document.getElementById("activityOptions").style.display = 'block';
+    }
+
+    function navigateActivity(value) {
+      if (value) showSection(value);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      applySavedTheme();
+      updateDashboard();
+    });
+  </script>
+</body>
+</html>
